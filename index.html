@@ -38,14 +38,28 @@
     header {
       border-bottom: 1px solid var(--tile-border);
       width: 100%;
-      text-align: center;
-      padding-bottom: 0.5rem;
+      max-width: 600px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1rem 0.5rem 1rem;
       margin-bottom: 1rem;
     }
 
     h1 {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       letter-spacing: 0.1rem;
+      text-align: center;
+      flex-grow: 1;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0 5px;
     }
 
     #game-container {
@@ -147,7 +161,7 @@
 
     #toast {
       position: fixed;
-      top: 8%;
+      top: 10%;
       left: 50%;
       transform: translateX(-50%);
       background-color: #ffffff;
@@ -156,8 +170,72 @@
       border-radius: 4px;
       font-weight: bold;
       display: none;
-      z-index: 10;
+      z-index: 100;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .modal-content {
+      background-color: #1a1a1b;
+      padding: 1.5rem;
+      border-radius: 8px;
+      max-width: 450px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      border: 1px solid var(--tile-border);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #818384;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .modal-body p {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin-bottom: 0.8rem;
+    }
+
+    .example-row {
+      display: flex;
+      gap: 5px;
+      margin: 10px 0;
+    }
+
+    .example-tile {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--tile-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 1.1rem;
     }
 
     @keyframes pop {
@@ -170,10 +248,61 @@
 <body>
 
   <header>
-    <h1>SunCon Quality Day Wordle</h1>
+    <button class="icon-btn" id="help-btn" title="How to play">ℹ️</button>
+    <h1>QA WORDLE</h1>
+    <div style="width: 24px;"></div> <!-- Spacer for center alignment -->
   </header>
 
   <div id="toast"></div>
+
+  <!-- How to Play Modal -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>How To Play</h2>
+        <button class="close-btn" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Guess the <strong>QA Construction Word</strong> in 6 tries.</p>
+        <p>Each guess must be a valid word. Hit the <strong>ENTER</strong> button to submit.</p>
+        <p>After each guess, the color of the tiles will change to show how close your guess was to the word.</p>
+        
+        <hr style="border-color: var(--tile-border); margin: 15px 0;">
+        
+        <p><strong>Examples</strong></p>
+        
+        <div class="example-row">
+          <div class="example-tile" style="background-color: var(--correct); border-color: var(--correct);">A</div>
+          <div class="example-tile">U</div>
+          <div class="example-tile">D</div>
+          <div class="example-tile">I</div>
+          <div class="example-tile">T</div>
+        </div>
+        <p><strong>A</strong> is in the word and in the correct spot.</p>
+
+        <div class="example-row">
+          <div class="example-tile">S</div>
+          <div class="example-tile" style="background-color: var(--present); border-color: var(--present);">L</div>
+          <div class="example-tile">U</div>
+          <div class="example-tile">M</div>
+          <div class="example-tile">P</div>
+        </div>
+        <p><strong>L</strong> is in the word but in the wrong spot.</p>
+
+        <div class="example-row">
+          <div class="example-tile">B</div>
+          <div class="example-tile">A</div>
+          <div class="example-tile" style="background-color: var(--absent); border-color: var(--absent);">T</div>
+          <div class="example-tile">C</div>
+          <div class="example-tile">H</div>
+        </div>
+        <p><strong>T</strong> is not in the word in any spot.</p>
+
+        <hr style="border-color: var(--tile-border); margin: 15px 0;">
+        <p style="font-size: 0.8rem; color: #a0a0a0;">Note: Target words are strictly selected from the Quality Assurance word list!</p>
+      </div>
+    </div>
+  </div>
 
   <div id="game-container">
     <div id="board"></div>
@@ -241,6 +370,16 @@
 
     const board = document.getElementById("board");
     const toast = document.getElementById("toast");
+    const helpModal = document.getElementById("help-modal");
+    const helpBtn = document.getElementById("help-btn");
+    const closeModalBtn = document.getElementById("close-modal");
+
+    // Modal Events
+    helpBtn.addEventListener("click", () => helpModal.style.display = "flex");
+    closeModalBtn.addEventListener("click", () => helpModal.style.display = "none");
+    window.addEventListener("click", (e) => {
+      if (e.target === helpModal) helpModal.style.display = "none";
+    });
 
     function initGame() {
       secretWord = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)].toUpperCase();
@@ -268,7 +407,7 @@
     }
 
     function handlePhysicalKeyPress(e) {
-      if (gameOver) return;
+      if (gameOver || helpModal.style.display === "flex") return;
       if (e.key === "Enter") handleInput("ENTER");
       else if (e.key === "Backspace") handleInput("BACKSPACE");
       else if (/^[a-zA-Z0-9]$/.test(e.key)) handleInput(e.key.toUpperCase());
