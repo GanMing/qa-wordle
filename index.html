@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Construction QA Wordle</title>
+  <style>
+    :root {
+      --bg-color: #121213;
+      --text-color: #ffffff;
+      --tile-border: #3a3a3c;
+      --tile-active: #565758;
+      --correct: #538d4e;
+      --present: #b59f3b;
+      --absent: #3a3a3c;
+      --key-bg: #818384;
+      --word-length: 5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 1rem 0;
+    }
+
+    header {
+      border-bottom: 1px solid var(--tile-border);
+      width: 100%;
+      text-align: center;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      letter-spacing: 0.1rem;
+    }
+
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    #board {
+      display: grid;
+      grid-template-rows: repeat(6, 1fr);
+      gap: 5px;
+      padding: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: repeat(var(--word-length), 1fr);
+      gap: 5px;
+    }
+
+    .tile {
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--tile-border);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      user-select: none;
+      transition: transform 0.15s ease-in-out;
+    }
+
+    .tile[data-state="active"] {
+      border-color: var(--tile-active);
+      animation: pop 0.1s ease-in-out;
+    }
+
+    .tile[data-state="correct"] {
+      background-color: var(--correct);
+      border-color: var(--correct);
+    }
+
+    .tile[data-state="present"] {
+      background-color: var(--present);
+      border-color: var(--present);
+    }
+
+    .tile[data-state="absent"] {
+      background-color: var(--absent);
+      border-color: var(--absent);
+    }
+
+    #keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      padding: 0 8px;
+    }
+
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+      touch-action: manipulation;
+    }
+
+    .key {
+      background-color: var(--key-bg);
+      color: white;
+      border: 0;
+      border-radius: 4px;
+      font-weight: bold;
+      height: 52px;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      text-transform: uppercase;
+      user-select: none;
+      font-size: 0.85rem;
+    }
+
+    .key.large {
+      flex: 1.5;
+      font-size: 0.7rem;
+    }
+
+    .key[data-state="correct"] { background-color: var(--correct); }
+    .key[data-state="present"] { background-color: var(--present); }
+    .key[data-state="absent"] { background-color: var(--absent); opacity: 0.5; }
+
+    #toast {
+      position: fixed;
+      top: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #ffffff;
+      color: #121213;
+      padding: 10px 18px;
+      border-radius: 4px;
+      font-weight: bold;
+      display: none;
+      z-index: 10;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.9); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CONSTRUCTION QA WORDLE</h1>
+  </header>
+
+  <div id="toast"></div>
+
+  <div id="game-container">
+    <div id="board"></div>
+
+    <div id="keyboard">
+      <div class="keyboard-row">
+        <button class="key" data-key="Q">Q</button>
+        <button class="key" data-key="W">W</button>
+        <button class="key" data-key="E">E</button>
+        <button class="key" data-key="R">R</button>
+        <button class="key" data-key="T">T</button>
+        <button class="key" data-key="Y">Y</button>
+        <button class="key" data-key="U">U</button>
+        <button class="key" data-key="I">I</button>
+        <button class="key" data-key="O">O</button>
+        <button class="key" data-key="P">P</button>
+      </div>
+      <div class="keyboard-row">
+        <button class="key" data-key="A">A</button>
+        <button class="key" data-key="S">S</button>
+        <button class="key" data-key="D">D</button>
+        <button class="key" data-key="F">F</button>
+        <button class="key" data-key="G">G</button>
+        <button class="key" data-key="H">H</button>
+        <button class="key" data-key="J">J</button>
+        <button class="key" data-key="K">K</button>
+        <button class="key" data-key="L">L</button>
+      </div>
+      <div class="keyboard-row">
+        <button class="key large" data-key="ENTER">ENTER</button>
+        <button class="key" data-key="Z">Z</button>
+        <button class="key" data-key="X">X</button>
+        <button class="key" data-key="C">C</button>
+        <button class="key" data-key="V">V</button>
+        <button class="key" data-key="B">B</button>
+        <button class="key" data-key="N">N</button>
+        <button class="key" data-key="M">M</button>
+        <button class="key large" data-key="BACKSPACE">DEL</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // ANSWER WORD BANK (Your Custom List)
+    // ==========================================
+    const WORD_BANK = [
+      "ACCEPT", "ACCESS", "ALIGN", "APPROVE", "ASBUILT", "AUDIT", 
+      "BATCH", "CAR", "CHECK", "CLAUSE", "CLOSE", "CODES", 
+      "CORE", "CSS", "CUBE", "CURE", "CUSTOME", "DEFECT", 
+      "DESIGN", "DRAFT", "DRAIN", "FINAL", "HOLD", "IMPROVE", 
+      "ISO9001", "ITP", "LABEL", "LAYOUT", "LEAK", "MANUAL", 
+      "MOCKUP", "NCR", "OBS", "PASS", "PATCH", "PERMIT", 
+      "PLAN", "POLICY", "QESH", "RECORD", "REPORT", "REVIEW", 
+      "REWORK", "RISK", "ROOT", "ROR", "RULES", "SAFETY", 
+      "SAMPLE", "SCOPE", "SHEET", "SIGNOFF", "SLUMP", "SNAG", 
+      "SOP", "SPECS", "STAMP", "SUBMIT", "SUPPORT", "SURVEY", 
+      "SYSTEM", "TMS", "TRACE", "VERIFY", "VOID", "WITNESS", "WMS"
+    ];
+
+    const MAX_ATTEMPTS = 6;
+    let secretWord = "";
+    let WORD_LENGTH = 5;
+    let currentAttempt = 0;
+    let currentGuess = "";
+    let gameOver = false;
+
+    const board = document.getElementById("board");
+    const toast = document.getElementById("toast");
+
+    function initGame() {
+      // Pick random answer from custom list
+      secretWord = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)].toUpperCase();
+      WORD_LENGTH = secretWord.length;
+
+      // Update CSS dynamic grid size
+      document.documentElement.style.setProperty('--word-length', WORD_LENGTH);
+
+      board.innerHTML = "";
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        const row = document.createElement("div");
+        row.className = "row";
+        for (let j = 0; j < WORD_LENGTH; j++) {
+          const tile = document.createElement("div");
+          tile.className = "tile";
+          tile.id = `tile-${i}-${j}`;
+          row.appendChild(tile);
+        }
+        board.appendChild(row);
+      }
+
+      document.addEventListener("keydown", handlePhysicalKeyPress);
+      document.querySelectorAll(".key").forEach(key => {
+        key.addEventListener("click", () => handleInput(key.getAttribute("data-key")));
+      });
+    }
+
+    function handlePhysicalKeyPress(e) {
+      if (gameOver) return;
+      if (e.key === "Enter") handleInput("ENTER");
+      else if (e.key === "Backspace") handleInput("BACKSPACE");
+      else if (/^[a-zA-Z0-9]$/.test(e.key)) handleInput(e.key.toUpperCase());
+    }
+
+    function handleInput(key) {
+      if (gameOver) return;
+
+      if (key === "ENTER") {
+        submitGuess();
+      } else if (key === "BACKSPACE") {
+        removeLetter();
+      } else if (currentGuess.length < WORD_LENGTH) {
+        addLetter(key);
+      }
+    }
+
+    function addLetter(letter) {
+      currentGuess += letter;
+      const tile = document.getElementById(`tile-${currentAttempt}-${currentGuess.length - 1}`);
+      tile.textContent = letter;
+      tile.setAttribute("data-state", "active");
+    }
+
+    function removeLetter() {
+      if (currentGuess.length === 0) return;
+      const tile = document.getElementById(`tile-${currentAttempt}-${currentGuess.length - 1}`);
+      tile.textContent = "";
+      tile.removeAttribute("data-state");
+      currentGuess = currentGuess.slice(0, -1);
+    }
+
+    // Checks if the typed guess is a valid English word via API, or in our custom list
+    async function isValidEnglishWord(word) {
+      if (WORD_BANK.includes(word)) return true; // Always allow list words
+      
+      try {
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
+        return res.ok;
+      } catch (err) {
+        return true; // Fallback to allow word if offline/API fails
+      }
+    }
+
+    async function submitGuess() {
+      if (currentGuess.length !== WORD_LENGTH) {
+        showToast(`Must be ${WORD_LENGTH} letters long!`);
+        return;
+      }
+
+      showToast("Checking word...", 1000);
+      const valid = await isValidEnglishWord(currentGuess);
+      
+      if (!valid) {
+        showToast("Not in English dictionary!");
+        return;
+      }
+
+      const guessArray = currentGuess.split("");
+      const secretArray = secretWord.split("");
+      const tileStates = Array(WORD_LENGTH).fill("absent");
+
+      // First Pass: Green (Correct)
+      guessArray.forEach((letter, i) => {
+        if (letter === secretArray[i]) {
+          tileStates[i] = "correct";
+          secretArray[i] = null;
+        }
+      });
+
+      // Second Pass: Yellow (Present)
+      guessArray.forEach((letter, i) => {
+        if (tileStates[i] !== "correct") {
+          const matchIndex = secretArray.indexOf(letter);
+          if (matchIndex !== -1) {
+            tileStates[i] = "present";
+            secretArray[matchIndex] = null;
+          }
+        }
+      });
+
+      // Render Tiles
+      guessArray.forEach((letter, i) => {
+        const tile = document.getElementById(`tile-${currentAttempt}-${i}`);
+        tile.setAttribute("data-state", tileStates[i]);
+        updateKeyboard(letter, tileStates[i]);
+      });
+
+      // Win / Lose Checks
+      if (currentGuess === secretWord) {
+        showToast("Great Job! Quality Approved!", 5000);
+        gameOver = true;
+      } else if (currentAttempt === MAX_ATTEMPTS - 1) {
+        showToast(`Game Over! The QA word was: ${secretWord}`, 10000);
+        gameOver = true;
+      } else {
+        currentAttempt++;
+        currentGuess = "";
+      }
+    }
+
+    function updateKeyboard(letter, state) {
+      const keyBtn = document.querySelector(`.key[data-key="${letter}"]`);
+      if (!keyBtn) return;
+
+      const currentState = keyBtn.getAttribute("data-state");
+      if (currentState === "correct") return;
+      if (currentState === "present" && state === "absent") return;
+
+      keyBtn.setAttribute("data-state", state);
+    }
+
+    function showToast(message, duration = 2000) {
+      toast.textContent = message;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, duration);
+    }
+
+    initGame();
+  </script>
+</body>
+</html>
