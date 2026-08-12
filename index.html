@@ -217,9 +217,7 @@
   </div>
 
   <script>
-    // ==========================================
     // ANSWER WORD BANK (Your Custom List)
-    // ==========================================
     const WORD_BANK = [
       "ACCEPT", "ACCESS", "ALIGN", "APPROVE", "ASBUILT", "AUDIT", 
       "BATCH", "CAR", "CHECK", "CLAUSE", "CLOSE", "CODES", 
@@ -245,11 +243,9 @@
     const toast = document.getElementById("toast");
 
     function initGame() {
-      // Pick random answer from custom list
       secretWord = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)].toUpperCase();
       WORD_LENGTH = secretWord.length;
 
-      // Update CSS dynamic grid size
       document.documentElement.style.setProperty('--word-length', WORD_LENGTH);
 
       board.innerHTML = "";
@@ -305,29 +301,9 @@
       currentGuess = currentGuess.slice(0, -1);
     }
 
-    // Checks if the typed guess is a valid English word via API, or in our custom list
-    async function isValidEnglishWord(word) {
-      if (WORD_BANK.includes(word)) return true; // Always allow list words
-      
-      try {
-        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word.toLowerCase()}`);
-        return res.ok;
-      } catch (err) {
-        return true; // Fallback to allow word if offline/API fails
-      }
-    }
-
-    async function submitGuess() {
+    function submitGuess() {
       if (currentGuess.length !== WORD_LENGTH) {
         showToast(`Must be ${WORD_LENGTH} letters long!`);
-        return;
-      }
-
-      showToast("Checking word...", 1000);
-      const valid = await isValidEnglishWord(currentGuess);
-      
-      if (!valid) {
-        showToast("Not in English dictionary!");
         return;
       }
 
