@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SunCon Quality Day 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>QA Wordle</title>
   <style>
     :root {
       --bg-color: #121213;
@@ -22,60 +22,72 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      overflow: hidden; /* Prevents unwanted bounce scrolling on mobile */
     }
 
     body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: space-between;
-      min-height: 100vh;
-      padding: 1rem 0;
+      align-items: center;
+      height: 100dvh; /* Adapts dynamically to mobile address bars */
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 0 8px 12px 8px;
     }
 
     header {
       border-bottom: 1px solid var(--tile-border);
       width: 100%;
-      max-width: 600px;
+      height: 48px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 1rem 0.5rem 1rem;
-      margin-bottom: 1rem;
+      padding: 0 8px;
     }
 
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
+      font-weight: 700;
       letter-spacing: 0.1rem;
       text-align: center;
       flex-grow: 1;
+      text-transform: uppercase;
     }
 
     .icon-btn {
       background: none;
       border: none;
       color: var(--text-color);
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       cursor: pointer;
-      padding: 0 5px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #game-container {
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
-      gap: 1rem;
+      flex-grow: 1;
       width: 100%;
-      max-width: 600px;
     }
 
     #board {
       display: grid;
       grid-template-rows: repeat(6, 1fr);
       gap: 5px;
-      padding: 10px;
+      padding: 10px 0;
     }
 
     .row {
@@ -85,13 +97,13 @@
     }
 
     .tile {
-      width: 48px;
-      height: 48px;
+      width: clamp(38px, 11vw, 56px);
+      height: clamp(38px, 11vw, 56px);
       border: 2px solid var(--tile-border);
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 1.5rem;
+      font-size: clamp(1.2rem, 5vw, 1.8rem);
       font-weight: bold;
       text-transform: uppercase;
       user-select: none;
@@ -123,14 +135,13 @@
       flex-direction: column;
       gap: 6px;
       width: 100%;
-      padding: 0 8px;
     }
 
     .keyboard-row {
       display: flex;
       justify-content: center;
       gap: 4px;
-      touch-action: manipulation;
+      width: 100%;
     }
 
     .key {
@@ -139,7 +150,7 @@
       border: 0;
       border-radius: 4px;
       font-weight: bold;
-      height: 52px;
+      height: 54px;
       flex: 1;
       display: flex;
       justify-content: center;
@@ -147,31 +158,35 @@
       cursor: pointer;
       text-transform: uppercase;
       user-select: none;
-      font-size: 0.85rem;
+      font-size: clamp(0.75rem, 3.5vw, 0.9rem);
+      -webkit-tap-highlight-color: transparent;
     }
 
     .key.large {
       flex: 1.5;
-      font-size: 0.7rem;
+      font-size: clamp(0.65rem, 3vw, 0.75rem);
     }
 
     .key[data-state="correct"] { background-color: var(--correct); }
     .key[data-state="present"] { background-color: var(--present); }
-    .key[data-state="absent"] { background-color: var(--absent); opacity: 0.5; }
+    .key[data-state="absent"] { background-color: var(--absent); opacity: 0.4; }
 
     #toast {
       position: fixed;
-      top: 10%;
+      top: 12%;
       left: 50%;
       transform: translateX(-50%);
       background-color: #ffffff;
       color: #121213;
-      padding: 10px 18px;
+      padding: 10px 16px;
       border-radius: 4px;
       font-weight: bold;
+      font-size: 0.9rem;
       display: none;
       z-index: 100;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+      white-space: nowrap;
     }
 
     /* Modal Styles */
@@ -182,7 +197,7 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.75);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 50;
@@ -190,13 +205,12 @@
 
     .modal-content {
       background-color: #1a1a1b;
-      padding: 1.5rem;
+      padding: 1.25rem;
       border-radius: 8px;
-      max-width: 450px;
+      max-width: 420px;
       width: 90%;
-      max-height: 90vh;
+      max-height: 85vh;
       overflow-y: auto;
-      position: relative;
       border: 1px solid var(--tile-border);
     }
 
@@ -204,7 +218,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
 
     .close-btn {
@@ -216,26 +230,26 @@
     }
 
     .modal-body p {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       line-height: 1.4;
       margin-bottom: 0.8rem;
     }
 
     .example-row {
       display: flex;
-      gap: 5px;
-      margin: 10px 0;
+      gap: 4px;
+      margin: 8px 0;
     }
 
     .example-tile {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border: 2px solid var(--tile-border);
       display: flex;
       justify-content: center;
       align-items: center;
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
 
     @keyframes pop {
@@ -250,7 +264,7 @@
   <header>
     <button class="icon-btn" id="help-btn" title="How to play">ℹ️</button>
     <h1>QA WORDLE</h1>
-    <div style="width: 24px;"></div> <!-- Spacer for center alignment -->
+    <div style="width: 28px;"></div>
   </header>
 
   <div id="toast"></div>
@@ -264,10 +278,10 @@
       </div>
       <div class="modal-body">
         <p>Guess the <strong>QA Construction Word</strong> in 6 tries.</p>
-        <p>Each guess must be a valid word. Hit the <strong>ENTER</strong> button to submit.</p>
-        <p>After each guess, the color of the tiles will change to show how close your guess was to the word.</p>
+        <p>Hit <strong>ENTER</strong> to submit each guess.</p>
+        <p>Tile colors will reveal how close your guess was to the word.</p>
         
-        <hr style="border-color: var(--tile-border); margin: 15px 0;">
+        <hr style="border-color: var(--tile-border); margin: 12px 0;">
         
         <p><strong>Examples</strong></p>
         
@@ -298,55 +312,54 @@
         </div>
         <p><strong>T</strong> is not in the word in any spot.</p>
 
-        <hr style="border-color: var(--tile-border); margin: 15px 0;">
-        <p style="font-size: 0.8rem; color: #a0a0a0;">Note: Target words are strictly selected from the Quality Assurance word list!</p>
+        <hr style="border-color: var(--tile-border); margin: 12px 0;">
+        <p style="font-size: 0.75rem; color: #a0a0a0;">Target words are picked strictly from the Quality Assurance word list!</p>
       </div>
     </div>
   </div>
 
   <div id="game-container">
     <div id="board"></div>
+  </div>
 
-    <div id="keyboard">
-      <div class="keyboard-row">
-        <button class="key" data-key="Q">Q</button>
-        <button class="key" data-key="W">W</button>
-        <button class="key" data-key="E">E</button>
-        <button class="key" data-key="R">R</button>
-        <button class="key" data-key="T">T</button>
-        <button class="key" data-key="Y">Y</button>
-        <button class="key" data-key="U">U</button>
-        <button class="key" data-key="I">I</button>
-        <button class="key" data-key="O">O</button>
-        <button class="key" data-key="P">P</button>
-      </div>
-      <div class="keyboard-row">
-        <button class="key" data-key="A">A</button>
-        <button class="key" data-key="S">S</button>
-        <button class="key" data-key="D">D</button>
-        <button class="key" data-key="F">F</button>
-        <button class="key" data-key="G">G</button>
-        <button class="key" data-key="H">H</button>
-        <button class="key" data-key="J">J</button>
-        <button class="key" data-key="K">K</button>
-        <button class="key" data-key="L">L</button>
-      </div>
-      <div class="keyboard-row">
-        <button class="key large" data-key="ENTER">ENTER</button>
-        <button class="key" data-key="Z">Z</button>
-        <button class="key" data-key="X">X</button>
-        <button class="key" data-key="C">C</button>
-        <button class="key" data-key="V">V</button>
-        <button class="key" data-key="B">B</button>
-        <button class="key" data-key="N">N</button>
-        <button class="key" data-key="M">M</button>
-        <button class="key large" data-key="BACKSPACE">DEL</button>
-      </div>
+  <div id="keyboard">
+    <div class="keyboard-row">
+      <button class="key" data-key="Q">Q</button>
+      <button class="key" data-key="W">W</button>
+      <button class="key" data-key="E">E</button>
+      <button class="key" data-key="R">R</button>
+      <button class="key" data-key="T">T</button>
+      <button class="key" data-key="Y">Y</button>
+      <button class="key" data-key="U">U</button>
+      <button class="key" data-key="I">I</button>
+      <button class="key" data-key="O">O</button>
+      <button class="key" data-key="P">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key" data-key="A">A</button>
+      <button class="key" data-key="S">S</button>
+      <button class="key" data-key="D">D</button>
+      <button class="key" data-key="F">F</button>
+      <button class="key" data-key="G">G</button>
+      <button class="key" data-key="H">H</button>
+      <button class="key" data-key="J">J</button>
+      <button class="key" data-key="K">K</button>
+      <button class="key" data-key="L">L</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key large" data-key="ENTER">ENTER</button>
+      <button class="key" data-key="Z">Z</button>
+      <button class="key" data-key="X">X</button>
+      <button class="key" data-key="C">C</button>
+      <button class="key" data-key="V">V</button>
+      <button class="key" data-key="B">B</button>
+      <button class="key" data-key="N">N</button>
+      <button class="key" data-key="M">M</button>
+      <button class="key large" data-key="BACKSPACE">DEL</button>
     </div>
   </div>
 
   <script>
-    // ANSWER WORD BANK (Your Custom List)
     const WORD_BANK = [
       "ACCEPT", "ACCESS", "ALIGN", "APPROVE", "ASBUILT", "AUDIT", 
       "BATCH", "CAR", "CHECK", "CLAUSE", "CLOSE", "CODES", 
@@ -374,7 +387,6 @@
     const helpBtn = document.getElementById("help-btn");
     const closeModalBtn = document.getElementById("close-modal");
 
-    // Modal Events
     helpBtn.addEventListener("click", () => helpModal.style.display = "flex");
     closeModalBtn.addEventListener("click", () => helpModal.style.display = "none");
     window.addEventListener("click", (e) => {
@@ -481,7 +493,7 @@
         showToast("Great Job! Quality Approved!", 5000);
         gameOver = true;
       } else if (currentAttempt === MAX_ATTEMPTS - 1) {
-        showToast(`Game Over! The QA word was: ${secretWord}`, 10000);
+        showToast(`Game Over! Answer: ${secretWord}`, 10000);
         gameOver = true;
       } else {
         currentAttempt++;
