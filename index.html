@@ -81,13 +81,14 @@
       align-items: center;
       flex-grow: 1;
       width: 100%;
+      gap: 10px;
     }
 
     #board {
       display: grid;
       grid-template-rows: repeat(6, 1fr);
       gap: 5px;
-      padding: 10px 0;
+      padding: 5px 0;
     }
 
     .row {
@@ -128,6 +129,27 @@
     .tile[data-state="absent"] {
       background-color: var(--absent);
       border-color: var(--absent);
+    }
+
+    /* Next Word Button Styling */
+    #next-btn {
+      display: none; /* Hidden until game ends */
+      background-color: var(--correct);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 0.05rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      animation: pop 0.2s ease-in-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #next-btn:active {
+      transform: scale(0.96);
     }
 
     #keyboard {
@@ -197,7 +219,7 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.75);
-      display: flex; /* Defaults to flex so it opens automatically on page load */
+      display: flex;
       justify-content: center;
       align-items: center;
       z-index: 50;
@@ -254,7 +276,7 @@
 
     @keyframes pop {
       0% { transform: scale(0.9); }
-      50% { transform: scale(1.1); }
+      50% { transform: scale(1.05); }
       100% { transform: scale(1); }
     }
   </style>
@@ -269,7 +291,7 @@
 
   <div id="toast"></div>
 
-  <!-- How to Play Modal (Visible immediately on page load) -->
+  <!-- How to Play Modal -->
   <div class="modal-overlay" id="help-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -320,6 +342,7 @@
 
   <div id="game-container">
     <div id="board"></div>
+    <button id="next-btn">NEXT WORD ➔</button>
   </div>
 
   <div id="keyboard">
@@ -361,17 +384,26 @@
 
   <script>
     const WORD_BANK = [
-      "ACCEPT", "ACCESS", "ALIGN", "APPROVE", "ASBUILT", "AUDIT", 
-      "BATCH", "CAR", "CHECK", "CLAUSE", "CLOSE", "CODES", 
-      "CORE", "CSS", "CUBE", "CURE", "CUSTOME", "DEFECT", 
-      "DESIGN", "DRAFT", "DRAIN", "FINAL", "HOLD", "IMPROVE", 
-      "ISO9001", "ITP", "LABEL", "LAYOUT", "LEAK", "MANUAL", 
-      "MOCKUP", "NCR", "OBS", "PASS", "PATCH", "PERMIT", 
-      "PLAN", "POLICY", "QESH", "RECORD", "REPORT", "REVIEW", 
-      "REWORK", "RISK", "ROOT", "ROR", "RULES", "SAFETY", 
-      "SAMPLE", "SCOPE", "SHEET", "SIGNOFF", "SLUMP", "SNAG", 
-      "SOP", "SPECS", "STAMP", "SUBMIT", "SUPPORT", "SURVEY", 
-      "SYSTEM", "TMS", "TRACE", "VERIFY", "VOID", "WITNESS", "WMS"
+      // 3-Letter Words
+      "BAR", "CAR", "CUB", "GAP", "ITP", "KEY", "MIX", "NCR", "OBS", 
+      "PAD", "PUP", "RAG", "ROR", "SOP", "TAG", "TAP", "TIE", "TMS", "WMS",
+
+      // 4-Letter Words
+      "BEAM", "BOND", "CODE", "CORE", "CURE", "DATA", "DRAFT", "FAIL", 
+      "FLAW", "GRID", "HOLD", "JOIN", "LEAK", "LOAD", "LOCK", "MEP", 
+      "PASS", "PIPE", "PLAN", "PUNCH", "REBAR", "RISK", "ROOF", "ROOT", 
+      "RULE", "SEAL", "SEEP", "SLAB", "SLAG", "SNAG", "SOIL", "SPEC", 
+      "STUD", "TEST", "VOID", "WALK", "WALL", "WARP",
+
+      // 5-Letter Words
+      "ALIGN", "ANCHOR", "AUDIT", "BATCH", "BLEED", "BLOCK", "CHECK", "CODES", 
+      "DATUM", "DRIFT", "ERROR", "FINAL", "FINES", "FORM", "FRAME", "GRADE", 
+      "GROUT", "HONEY", "LABEL", "MORTAR", "OWNER", "PATCH", "PROBE", "PROOF", 
+      "QESH", "RULES", "SCOPE", "SHEET", "SHORE", "SIGNS", "SLUMP", "SPALL", 
+      "SPECS", "STAGE", "STAMP", "STEEL", "TRACE", "WASTE", "YIELD",
+
+      // 6-Letter Words (Exactly 5)
+      "ACCEPT", "ASBUILT", "DEFECT", "MOCKUP", "VERIFY"
     ];
 
     const MAX_ATTEMPTS = 6;
@@ -383,6 +415,7 @@
 
     const board = document.getElementById("board");
     const toast = document.getElementById("toast");
+    const nextBtn = document.getElementById("next-btn");
     const helpModal = document.getElementById("help-modal");
     const helpBtn = document.getElementById("help-btn");
     const closeModalBtn = document.getElementById("close-modal");
@@ -393,12 +426,25 @@
       if (e.target === helpModal) helpModal.style.display = "none";
     });
 
+    nextBtn.addEventListener("click", initGame);
+
     function initGame() {
+      // Pick secret word
       secretWord = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)].toUpperCase();
       WORD_LENGTH = secretWord.length;
 
+      // Reset state
+      currentAttempt = 0;
+      currentGuess = "";
+      gameOver = false;
+
+      // Hide Next Button
+      nextBtn.style.display = "none";
+
+      // Set grid columns dynamically
       document.documentElement.style.setProperty('--word-length', WORD_LENGTH);
 
+      // Rebuild board
       board.innerHTML = "";
       for (let i = 0; i < MAX_ATTEMPTS; i++) {
         const row = document.createElement("div");
@@ -412,11 +458,17 @@
         board.appendChild(row);
       }
 
-      document.addEventListener("keydown", handlePhysicalKeyPress);
+      // Reset Virtual Keyboard Colors
       document.querySelectorAll(".key").forEach(key => {
-        key.addEventListener("click", () => handleInput(key.getAttribute("data-key")));
+        key.removeAttribute("data-state");
       });
     }
+
+    // Attach keyboard event listeners once on load
+    document.addEventListener("keydown", handlePhysicalKeyPress);
+    document.querySelectorAll(".key").forEach(key => {
+      key.addEventListener("click", () => handleInput(key.getAttribute("data-key")));
+    });
 
     function handlePhysicalKeyPress(e) {
       if (gameOver || helpModal.style.display === "flex") return;
@@ -481,7 +533,7 @@
         }
       });
 
-      // Render Tiles
+      // Render Tiles & Update Keyboard
       guessArray.forEach((letter, i) => {
         const tile = document.getElementById(`tile-${currentAttempt}-${i}`);
         tile.setAttribute("data-state", tileStates[i]);
@@ -490,15 +542,20 @@
 
       // Win / Lose Checks
       if (currentGuess === secretWord) {
-        showToast("Great Job! Quality Approved!", 5000);
-        gameOver = true;
+        showToast("Great Job! Quality Approved!", 4000);
+        endGame();
       } else if (currentAttempt === MAX_ATTEMPTS - 1) {
-        showToast(`Game Over! Answer: ${secretWord}`, 10000);
-        gameOver = true;
+        showToast(`Game Over! Answer: ${secretWord}`, 8000);
+        endGame();
       } else {
         currentAttempt++;
         currentGuess = "";
       }
+    }
+
+    function endGame() {
+      gameOver = true;
+      nextBtn.style.display = "inline-block";
     }
 
     function updateKeyboard(letter, state) {
@@ -520,6 +577,7 @@
       }, duration);
     }
 
+    // Start initial game on load
     initGame();
   </script>
 </body>
