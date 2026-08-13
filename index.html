@@ -98,13 +98,13 @@
     }
 
     .tile {
-      width: clamp(38px, 11vw, 56px);
-      height: clamp(38px, 11vw, 56px);
+      width: clamp(34px, 10vw, 56px);
+      height: clamp(34px, 10vw, 56px);
       border: 2px solid var(--tile-border);
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: clamp(1.2rem, 5vw, 1.8rem);
+      font-size: clamp(1.1rem, 4.5vw, 1.8rem);
       font-weight: bold;
       text-transform: uppercase;
       user-select: none;
@@ -133,7 +133,7 @@
 
     /* Next Word Button Styling */
     #next-btn {
-      display: none; /* Hidden until game ends */
+      display: none;
       background-color: var(--correct);
       color: white;
       border: none;
@@ -383,27 +383,25 @@
   </div>
 
   <script>
+    // Updated Word Bank from provided list
     const WORD_BANK = [
       // 3-Letter Words
-      "BAR", "CAR", "CUB", "GAP", "ITP", "KEY", "MIX", "NCR", "OBS", 
-      "PAD", "PUP", "RAG", "ROR", "SOP", "TAG", "TAP", "TIE", "TMS", "WMS",
+      "CAR", "CUB", "ITP", "KEY", "MEP", "NCR", "OBS", "PQP", "ROR", "SOP", "TAG", "TMS", "WMS",
 
       // 4-Letter Words
-      "BEAM", "BOND", "CODE", "CORE", "CURE", "DATA", "DRAFT", "FAIL", 
-      "FLAW", "GRID", "HOLD", "JOIN", "LEAK", "LOAD", "LOCK", "MEP", 
-      "PASS", "PIPE", "PLAN", "PUNCH", "REBAR", "RISK", "ROOF", "ROOT", 
-      "RULE", "SEAL", "SEEP", "SLAB", "SLAG", "SNAG", "SOIL", "SPEC", 
-      "STUD", "TEST", "VOID", "WALK", "WALL", "WARP",
+      "CODE", "DATA", "FAIL", "FLAW", "FORM", "GRID", "HOLD", "JOIN", "LOCK", "PASS", 
+      "PLAN", "QESH", "RISK", "ROOF", "ROOT", "RULE", "SLAB", "SLAG", "SNAG", "SOIL", 
+      "SPEC", "STUD", "TEST", "VOID",
 
       // 5-Letter Words
-      "ALIGN", "ANCHOR", "AUDIT", "BATCH", "BLEED", "BLOCK", "CHECK", "CODES", 
-      "DATUM", "DRIFT", "ERROR", "FINAL", "FINES", "FORM", "FRAME", "GRADE", 
-      "GROUT", "HONEY", "LABEL", "MORTAR", "OWNER", "PATCH", "PROBE", "PROOF", 
-      "QESH", "RULES", "SCOPE", "SHEET", "SHORE", "SIGNS", "SLUMP", "SPALL", 
-      "SPECS", "STAGE", "STAMP", "STEEL", "TRACE", "WASTE", "YIELD",
+      "ALIGN", "AUDIT", "BATCH", "CHECK", "CODES", "ERROR", "FINAL", "LABEL", "PROOF", 
+      "RULES", "SCOPE", "SIGNS",
 
-      // 6-Letter Words (Exactly 5)
-      "ACCEPT", "ASBUILT", "DEFECT", "MOCKUP", "VERIFY"
+      // 6-Letter Words
+      "ACCEPT", "DEFECT", "MOCKUP", "VERIFY",
+
+      // 7-Letter Words
+      "QUALITY"
     ];
 
     const MAX_ATTEMPTS = 6;
